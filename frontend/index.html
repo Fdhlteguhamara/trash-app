@@ -133,12 +133,18 @@
     window.selectedLng = e.latlng.lng;
   });
 
-  async function submitReport() {
+async function submitReport() {
+  try {
     const description = document.getElementById('description').value;
     const image = document.getElementById('image').files[0];
 
     if (!window.selectedLat) {
       alert("Pilih lokasi dulu!");
+      return;
+    }
+
+    if (!image) {
+      alert("Upload gambar dulu!");
       return;
     }
 
@@ -154,9 +160,16 @@
     });
 
     if (!res.ok) {
-      alert("Gagal kirim laporan!");
+      const text = await res.text();
+      alert("Gagal: " + text);
       return;
     }
+
+    alert("Laporan terkirim!");
+  } catch (err) {
+    console.error(err);
+    alert("Error: " + err.message);
+  }
 }
 </script>
 
