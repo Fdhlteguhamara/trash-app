@@ -1,78 +1,131 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <title>Lapor Sampah</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <meta charset="UTF-8">
+  <title>Trash App</title>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+  <!-- Style -->
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f7fa;
+    }
+
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    #map {
+      height: 60vh;
+      width: 100%;
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      margin-top: -50px;
+      position: relative;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background: #27ae60;
+      color: white;
+      border: none;
+      padding: 12px;
+      width: 100%;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background: #219150;
+    }
+  </style>
 </head>
+
 <body>
 
-<h2>Lapor Sampah Liar</h2>
+<header>🚮 Trash Reporting System</header>
 
-<form id="reportForm">
-  <input type="text" id="title" placeholder="Judul" required><br><br>
-  
-  <textarea id="description" placeholder="Deskripsi" required></textarea><br><br>
-  
-  <input type="file" id="image" required><br><br>
+<div id="map"></div>
 
-  <input type="text" id="latitude" placeholder="Latitude" readonly>
-  <input type="text" id="longitude" placeholder="Longitude" readonly><br><br>
+<div class="container">
+  <div class="card">
+    <h3>Laporkan Sampah</h3>
 
-  <button type="submit">Kirim Laporan Anda</button>
-</form>
+    <input type="text" id="description" placeholder="Deskripsi sampah">
 
-<h3>Klik peta untuk pilih lokasi Anda Saat ini </h3>
-<div id="map" style="height: 400px;"></div>
+    <button onclick="submitReport()">Kirim Laporan</button>
+  </div>
+</div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
-  var map = L.map('map').setView([-6.2, 106.8], 13);
+  const map = L.map('map').setView([-6.2, 106.8], 10);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: 'Map data'
+    attribution: '&copy; OpenStreetMap'
   }).addTo(map);
 
-  var marker;
+  let marker;
 
   map.on('click', function(e) {
-    var lat = e.latlng.lat;
-    var lng = e.latlng.lng;
-
-    document.getElementById('latitude').value = lat;
-    document.getElementById('longitude').value = lng;
-
     if (marker) {
       map.removeLayer(marker);
     }
 
-    marker = L.marker([lat, lng]).addTo(map);
+    marker = L.marker(e.latlng).addTo(map);
+    window.selectedLat = e.latlng.lat;
+    window.selectedLng = e.latlng.lng;
   });
 
-  document.getElementById('reportForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+  async function submitReport() {
+    const description = document.getElementById('description').value;
 
-    var formData = new FormData();
-    formData.append('title', document.getElementById('title').value);
-    formData.append('description', document.getElementById('description').value);
-    formData.append('latitude', document.getElementById('latitude').value);
-    formData.append('longitude', document.getElementById('longitude').value);
-    formData.append('image', document.getElementById('image').files[0]);
+    if (!window.selectedLat) {
+      alert("Klik lokasi di peta dulu!");
+      return;
+    }
 
-    fetch('http://localhost:3000/api/report', {
+    const res = await fetch('/api/reports', {
       method: 'POST',
-      body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-      alert('Laporan berhasil dikirim!');
-      location.reload();
-    })
-    .catch(err => {
-      console.error(err);
-      alert('Gagal kirim laporan');
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        description,
+        lat: window.selectedLat,
+        lng: window.selectedLng
+      })
     });
-  });
+
+    alert("Laporan terkirim!");
+  }
 </script>
 
 </body>
