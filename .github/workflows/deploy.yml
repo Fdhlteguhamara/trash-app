@@ -9,9 +9,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,6 +23,7 @@ jobs:
           script: |
             cd /var/www/your-project
             git pull origin main
-            docker rm -f trash-app || true
-            docker build -t trash-app .
-            docker run -d -p 3000:3000 --env-file .env --name trash-app trash-app
+            composer install --no-dev --optimize-autoloader
+            php artisan migrate --force
+            php artisan config:cache
+            php artisan route:cache
