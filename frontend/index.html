@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Lapor Sampah</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+<body>
+
+<h2>Lapor Sampah Liar</h2>
+
+<form id="reportForm">
+  <input type="text" id="title" placeholder="Judul" required><br><br>
+  
+  <textarea id="description" placeholder="Deskripsi" required></textarea><br><br>
+  
+  <input type="file" id="image" required><br><br>
+
+  <input type="text" id="latitude" placeholder="Latitude" readonly>
+  <input type="text" id="longitude" placeholder="Longitude" readonly><br><br>
+
+  <button type="submit">Kirim Laporan</button>
+</form>
+
+<h3>Klik peta untuk pilih lokasi</h3>
+<div id="map" style="height: 400px;"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+  var map = L.map('map').setView([-6.2, 106.8], 13);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: 'Map data'
+  }).addTo(map);
+
+  var marker;
+
+  map.on('click', function(e) {
+    var lat = e.latlng.lat;
+    var lng = e.latlng.lng;
+
+    document.getElementById('latitude').value = lat;
+    document.getElementById('longitude').value = lng;
+
+    if (marker) {
+      map.removeLayer(marker);
+    }
+
+    marker = L.marker([lat, lng]).addTo(map);
+  });
+
+  document.getElementById('reportForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    var formData = new FormData();
+    formData.append('title', document.getElementById('title').value);
+    formData.append('description', document.getElementById('description').value);
+    formData.append('latitude', document.getElementById('latitude').value);
+    formData.append('longitude', document.getElementById('longitude').value);
+    formData.append('image', document.getElementById('image').files[0]);
+
+    fetch('http://localhost:3000/api/report', {
+      method: 'POST',
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      alert('Laporan berhasil dikirim!');
+      location.reload();
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Gagal kirim laporan');
+    });
+  });
+</script>
+
+</body>
+</html>
