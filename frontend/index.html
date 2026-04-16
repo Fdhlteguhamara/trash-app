@@ -153,8 +153,11 @@
       body: formData
     });
 
-    alert("Laporan terkirim!");
-  }
+    if (!res.ok) {
+      alert("Gagal kirim laporan!");
+      return;
+    }
+}
 </script>
 
 </body>
