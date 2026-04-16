@@ -81,6 +81,10 @@
 
     <input type="text" id="description" placeholder="Deskripsi sampah">
 
+    <input type="file" id="image">
+
+    <button onclick="getLocation()">📍 Gunakan Lokasi Saya</button>
+
     <button onclick="submitReport()">Kirim Laporan</button>
   </div>
 </div>
@@ -88,6 +92,29 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
+  function getLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition((position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+
+      window.selectedLat = lat;
+      window.selectedLng = lng;
+
+      if (marker) {
+        map.removeLayer(marker);
+      }
+
+      marker = L.marker([lat, lng]).addTo(map);
+      map.setView([lat, lng], 15);
+
+    }, () => {
+      alert("Gagal ambil lokasi");
+    });
+  } else {
+    alert("Browser tidak mendukung GPS");
+  }
+}
   const map = L.map('map').setView([-6.2, 106.8], 10);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -108,20 +135,22 @@
 
   async function submitReport() {
     const description = document.getElementById('description').value;
+    const image = document.getElementById('image').files[0];
 
     if (!window.selectedLat) {
-      alert("Klik lokasi di peta dulu!");
+      alert("Pilih lokasi dulu!");
       return;
     }
 
+    const formData = new FormData();
+    formData.append("description", description);
+    formData.append("lat", window.selectedLat);
+    formData.append("lng", window.selectedLng);
+    formData.append("image", image);
+
     const res = await fetch('/api/reports', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        description,
-        lat: window.selectedLat,
-        lng: window.selectedLng
-      })
+      body: formData
     });
 
     alert("Laporan terkirim!");
