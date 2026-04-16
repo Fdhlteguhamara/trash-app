@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Peta Sampah</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+<body>
+
+<h2>Peta Sebaran Sampah</h2>
+
+<div id="map" style="height: 500px;"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+  var map = L.map('map').setView([-6.2, 106.8], 12);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: 'Map data'
+  }).addTo(map);
+
+    var icon = report.status === 'Selesai'
+    ? L.icon({ iconUrl: 'green.png', iconSize: [25, 25] })
+    : L.icon({ iconUrl: 'red.png', iconSize: [25, 25] });
+
+    L.marker([report.latitude, report.longitude], { icon }).addTo(map);
+    
+  // Ambil data dari backend
+  fetch('http://localhost:3000/api/reports')
+    .then(res => res.json())
+    .then(data => {
+
+      data.forEach(report => {
+        var marker = L.marker([report.latitude, report.longitude]).addTo(map);
+
+        marker.bindPopup(`
+          <b>${report.title}</b><br>
+          ${report.description}<br>
+          <img src="${report.image_url}" width="100"><br>
+          Status: ${report.status}
+        `);
+      });
+
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Gagal load data');
+    });
+</script>
+
+</body>
+</html>
