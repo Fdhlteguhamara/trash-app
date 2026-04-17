@@ -9,15 +9,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// serve frontend
-app.use(express.static(path.join(__dirname, '../frontend')));
-
-// API
+// 🔥 API HARUS DI ATAS
 const reportRoutes = require('./routes/reportRoutes');
 app.use('/api', reportRoutes);
 
-// fallback (FIX ERROR DI SINI)
-app.use((req, res) => {
+// 🔥 BARU STATIC
+app.use(express.static(path.join(__dirname, '../frontend')));
+
+// 🔥 fallback (hanya untuk frontend route)
+app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
